@@ -1,0 +1,1 @@
+TestYourQuery is a JUnit integrated framework for unit testing your querys.
