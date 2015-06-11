@@ -58,7 +58,6 @@
 			<version>3.6.10.Final</version>
 			<scope>compile</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-annotations</artifactId>

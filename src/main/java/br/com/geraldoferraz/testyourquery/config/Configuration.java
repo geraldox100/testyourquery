@@ -1,32 +1,53 @@
 package br.com.geraldoferraz.testyourquery.config;
 
-import java.util.Properties;
 import java.util.Set;
 
-import javax.persistence.EntityManagerFactory;
+public class Configuration {
 
-import org.hibernate.ejb.Ejb3Configuration;
+	private Set<Class<?>> entities;
+	private String schema;
+	private String showSQL;
+	private SessionMode sessionMode;
 
-public abstract class Configuration {
-
-	private Ejb3Configuration config;
-
-	public Configuration() {
-		config = new Ejb3Configuration();
-		config.setProperties(getProperties());
-		Set<Class<?>> annotedClasses = getAnnotedClasses();
-		for (Class<?> annotedClass : annotedClasses) {
-			config.addAnnotatedClass(annotedClass);
-		}
+	public Set<Class<?>> getEntities() {
+		return entities;
 	}
 
-	@SuppressWarnings("deprecation")
-	public EntityManagerFactory getEntityManagerFactory() {
-		return config.createEntityManagerFactory();
+	public void setEntities(Set<Class<?>> entities) {
+		this.entities = entities;
 	}
 
-	protected abstract Properties getProperties();
+	public String getSchema() {
+		return schema;
+	}
 
-	protected abstract Set<Class<?>> getAnnotedClasses();
+	public void setSchema(String schema) {
+		this.schema = schema;
+	}
+
+	public String getShowSQL() {
+		return showSQL;
+	}
+
+	public void setShowSQL(String showSQL) {
+		this.showSQL = showSQL;
+	}
+
+	public SessionMode getSessionMode() {
+		return sessionMode;
+	}
+
+	public void setSessionMode(SessionMode sessionMode) {
+		this.sessionMode = sessionMode;
+	}
+
+	public boolean hasSchmea() {
+		return schema != null && !schema.isEmpty();
+	}
+
+	public boolean hasEntities() {
+		return this.entities != null && !this.entities.isEmpty();
+	}
+
 
 }
