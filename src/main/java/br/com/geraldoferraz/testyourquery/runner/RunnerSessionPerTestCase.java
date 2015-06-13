@@ -5,12 +5,12 @@ import java.sql.Connection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import br.com.geraldoferraz.testyourquery.annotations.Dao;
 import br.com.geraldoferraz.testyourquery.annotations.JDBCConnection;
-import br.com.geraldoferraz.testyourquery.annotations.JPAEntityManager;
 import br.com.geraldoferraz.testyourquery.config.Configuration;
-import br.com.geraldoferraz.testyourquery.util.ConnectionManager;
+import br.com.geraldoferraz.testyourquery.util.database.ConnectionManager;
 import br.com.geraldoferraz.testyourquery.util.reflection.ClassRelector;
 
 public class RunnerSessionPerTestCase implements Runner {
@@ -64,7 +64,7 @@ public class RunnerSessionPerTestCase implements Runner {
 	}
 
 	private void injectEntityManagerOn(Object createdTest) throws Exception {
-		List<Field> fields = clazzReflector.getAnnotatedFields(JPAEntityManager.class);
+		List<Field> fields = clazzReflector.getAnnotatedFields(PersistenceContext.class);
 		for (Field field : fields) {
 			ClassRelector.injectOn(field, createdTest, em);
 		}

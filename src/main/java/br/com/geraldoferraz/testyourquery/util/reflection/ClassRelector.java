@@ -51,9 +51,12 @@ public class ClassRelector {
 	public Method getConfiguratorMethod() {
 		MirrorList<Method> methodsList = getMethodsAnnotedWith(Configurator.class);
 		verificaQueNaoExisteMaisDeUmConfigurator(methodsList);
-		Method method = methodsList.get(0);
-		verificaQueConfiguratorEhStatic(method);
-		return method;
+		if(!methodsList.isEmpty()){
+			Method method = methodsList.get(0);
+			verificaQueConfiguratorEhStatic(method);
+			return method;
+		}
+		return null;
 	}
 	
 	private void verificaQueConfiguratorEhStatic(Method method) {

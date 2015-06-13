@@ -1,4 +1,4 @@
-package br.com.geraldoferraz.testyourquery.util;
+package br.com.geraldoferraz.testyourquery.util.database;
 
 import java.sql.Connection;
 import java.util.ArrayList;
