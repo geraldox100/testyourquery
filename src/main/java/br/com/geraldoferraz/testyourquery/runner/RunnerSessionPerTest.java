@@ -1,9 +1,6 @@
 package br.com.geraldoferraz.testyourquery.runner;
 
-import static java.util.Arrays.asList;
-
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -17,18 +14,17 @@ import br.com.geraldoferraz.testyourquery.util.ConnectionManager;
 import br.com.geraldoferraz.testyourquery.util.reflection.ClassRelector;
 
 public class RunnerSessionPerTest implements Runner {
-	
-	
+
 	private ClassRelector clazzReflector;
 	private ConnectionManager connectionManager;
-	
+
 	public RunnerSessionPerTest(ClassRelector clazzReflector, Configuration configuration) {
 		this.clazzReflector = clazzReflector;
 		connectionManager = new ConnectionManager(configuration.getEntityManagerProvider());
 	}
 
 	public RunnerSessionPerTest(ClassRelector classRelector) {
-		this(classRelector,new ConfigurationFactory().build());
+		this(classRelector, new ConfigurationFactory().build());
 	}
 
 	public void beforeRunTest() {
@@ -45,7 +41,7 @@ public class RunnerSessionPerTest implements Runner {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void injectDependenciesOn(Object createdTest) throws Exception {
 		injectEntityManagerOn(createdTest);
 		injectConnectionOn(createdTest);
@@ -55,58 +51,29 @@ public class RunnerSessionPerTest implements Runner {
 	private void injectEntityManagerOnDAOs(Object createdTest) throws Exception {
 		List<Field> fields = clazzReflector.getAnnotatedFields(Dao.class);
 		for (Field field : fields) {
-			field.setAccessible(true);
 
-			Object daoObject = field.getType().newInstance();
-			field.set(createdTest, daoObject);
+			Object daoObject = ClassRelector.newInstanceOf(field);
+			ClassRelector.injectOn(field, createdTest, daoObject);
 
-			List<Field> entityManagers = getEntityManagerFields(daoObject);
+			List<Field> entityManagers = ClassRelector.getFieldsByType(EntityManager.class, daoObject);
 			for (Field entityManagerField : entityManagers) {
-				entityManagerField.setAccessible(true);
-				entityManagerField.set(daoObject, connectionManager.getNewEntityManager());
+				ClassRelector.injectOn(entityManagerField, daoObject, connectionManager.getNewEntityManager());
 			}
 		}
-	}
-
-	private List<Field> getEntityManagerFields(Object daoObject) throws IllegalAccessException {
-
-		List<Field> tmp = new ArrayList<Field>();
-
-		tmp.addAll(asList(daoObject.getClass().getDeclaredFields()));
-
-		Class<?> currerntSuper = daoObject.getClass().getSuperclass();
-		while (currerntSuper != null) {
-			tmp.addAll(asList(currerntSuper.getDeclaredFields()));
-			currerntSuper = currerntSuper.getSuperclass();
-		}
-
-		List<Field> retorno = new ArrayList<Field>();
-
-		for (Field field : tmp) {
-			if (field.getType().isAssignableFrom(EntityManager.class)) {
-				retorno.add(field);
-			}
-		}
-
-		return retorno;
 	}
 
 	private void injectEntityManagerOn(Object createdTest) throws Exception {
 		List<Field> fields = clazzReflector.getAnnotatedFields(JPAEntityManager.class);
 		for (Field field : fields) {
-			field.setAccessible(true);
-			field.set(createdTest, connectionManager.getNewEntityManager());
+			ClassRelector.injectOn(field, createdTest, connectionManager.getNewEntityManager());
 		}
 	}
 
 	private void injectConnectionOn(Object createdTest) throws Exception {
 		List<Field> fields = clazzReflector.getAnnotatedFields(JDBCConnection.class);
 		for (Field field : fields) {
-			field.setAccessible(true);
-			field.set(createdTest, connectionManager.getNewConnection());
+			ClassRelector.injectOn(field, createdTest, connectionManager.getNewConnection());
 		}
 	}
-
-	
 
 }
