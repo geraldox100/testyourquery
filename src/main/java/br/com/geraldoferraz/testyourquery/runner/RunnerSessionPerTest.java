@@ -11,15 +11,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.Session;
-import org.junit.runners.model.FrameworkField;
-import org.junit.runners.model.TestClass;
 
 import br.com.geraldoferraz.testyourquery.annotations.Dao;
 import br.com.geraldoferraz.testyourquery.annotations.JDBCConnection;
 import br.com.geraldoferraz.testyourquery.annotations.JPAEntityManager;
+import br.com.geraldoferraz.testyourquery.config.Configuration;
 import br.com.geraldoferraz.testyourquery.config.ConfigurationFactory;
 import br.com.geraldoferraz.testyourquery.config.EntityManagerProvider;
-import br.com.geraldoferraz.testyourquery.config.HSQLDB;
+import br.com.geraldoferraz.testyourquery.util.reflection.ClassRelector;
 
 public class RunnerSessionPerTest implements Runner {
 	
@@ -27,11 +26,17 @@ public class RunnerSessionPerTest implements Runner {
 	private List<EntityManager> entityManagers = new ArrayList<EntityManager>();
 	private EntityManagerFactory emf;
 	private EntityManagerProvider emProvider;
-	private TestClass testClass;
 	
-	public RunnerSessionPerTest(TestClass testClass) {
-		this.testClass = testClass;
-		emProvider = new HSQLDB(new ConfigurationFactory().build());
+	private ClassRelector clazzReflector;
+	
+	public RunnerSessionPerTest(ClassRelector clazzReflector, Configuration configuration) {
+		this.clazzReflector = clazzReflector;
+		
+		emProvider = configuration.getEntityManagerProvider();
+	}
+
+	public RunnerSessionPerTest(ClassRelector classRelector) {
+		this(classRelector,new ConfigurationFactory().build());
 	}
 
 	public void beforeRunTest() {
@@ -61,9 +66,8 @@ public class RunnerSessionPerTest implements Runner {
 	}
 
 	private void injectEntityManagerOnDAOs(Object createdTest) throws Exception {
-		List<FrameworkField> fields = testClass.getAnnotatedFields(Dao.class);
-		for (FrameworkField fField : fields) {
-			Field field = fField.getField();
+		List<Field> fields = clazzReflector.getAnnotatedFields(Dao.class);
+		for (Field field : fields) {
 			field.setAccessible(true);
 
 			Object daoObject = field.getType().newInstance();
@@ -101,18 +105,16 @@ public class RunnerSessionPerTest implements Runner {
 	}
 
 	private void injectEntityManagerOn(Object createdTest) throws Exception {
-		List<FrameworkField> fields = testClass.getAnnotatedFields(JPAEntityManager.class);
-		for (FrameworkField fField : fields) {
-			Field field = fField.getField();
+		List<Field> fields = clazzReflector.getAnnotatedFields(JPAEntityManager.class);
+		for (Field field : fields) {
 			field.setAccessible(true);
 			field.set(createdTest, createEntityManager());
 		}
 	}
 
 	private void injectConnectionOn(Object createdTest) throws Exception {
-		List<FrameworkField> fields = testClass.getAnnotatedFields(JDBCConnection.class);
-		for (FrameworkField fField : fields) {
-			Field field = fField.getField();
+		List<Field> fields = clazzReflector.getAnnotatedFields(JDBCConnection.class);
+		for (Field field : fields) {
 			field.setAccessible(true);
 			field.set(createdTest, createConnection());
 		}
@@ -158,6 +160,7 @@ public class RunnerSessionPerTest implements Runner {
 	private void closeConnections() {
 		for (Connection conn : connections) {
 			try {
+				conn.commit();
 				if (!conn.isClosed()) {
 					conn.close();
 				}
@@ -169,6 +172,7 @@ public class RunnerSessionPerTest implements Runner {
 
 	private void closeEntityManagers() {
 		for (EntityManager em : entityManagers) {
+			em.getTransaction().commit();
 			if (em.isOpen()) {
 				em.close();
 			}

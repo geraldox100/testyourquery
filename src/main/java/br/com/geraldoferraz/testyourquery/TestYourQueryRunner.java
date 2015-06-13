@@ -14,8 +14,7 @@ public class TestYourQueryRunner extends BlockJUnit4ClassRunner {
 
 	public TestYourQueryRunner(Class<?> klass) throws InitializationError {
 		super(klass);
-		runner = new RunnerFactory(getTestClass()).createRunner();
-
+		runner = new RunnerFactory(getTestClass().getJavaClass()).createRunner();
 	}
 
 	@Override

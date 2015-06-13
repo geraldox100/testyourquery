@@ -1,5 +1,6 @@
 package br.com.geraldoferraz.testyourquery.runner;
 
+
 public interface Runner {
 
 	void beforeRunTest();
@@ -7,5 +8,6 @@ public interface Runner {
 	void afterRunTest();
 
 	void testObjectCreated(Object testObject);
+
 
 }

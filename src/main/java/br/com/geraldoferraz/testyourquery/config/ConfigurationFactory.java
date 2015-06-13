@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.persistence.Entity;
 
 import br.com.geraldoferraz.scanyourpath.Scanner;
+import br.com.geraldoferraz.testyourquery.config.provider.PersistenceUnitProvider;
 
 public class ConfigurationFactory {
 
@@ -18,6 +19,8 @@ public class ConfigurationFactory {
 	private SessionMode sessionMode = SessionMode.PER_TEST;
 	private String basePackage;
 	private Set<Class<?>> entities = new HashSet<Class<?>>();
+	private EntityManagerProvider entityManagerProvider;
+	private String persistenceUnit;
 
 	public ConfigurationFactory withSchema(String schema) {
 		this.schema = schema;
@@ -48,14 +51,37 @@ public class ConfigurationFactory {
 		this.basePackage = basePackage;
 		return this;
 	}
+	
+	public ConfigurationFactory withProvider(EntityManagerProvider provider){
+		this.entityManagerProvider = provider;
+		return this;
+	}
+	
+	public ConfigurationFactory persistenceUnit(String persistenceUnit) {
+		this.persistenceUnit = persistenceUnit;
+		return this;
+	}
 
 	public Configuration build() {
 		Configuration configuration = new Configuration();
-		configuration.setEntities(getEntities());
-		configuration.setSchema(schema);
-		configuration.setShowSQL(showSQL);
 		configuration.setSessionMode(sessionMode);
+		configuration.setEntityManagerProvider(getProvider());
 		return configuration;
+	}
+
+	private EntityManagerProvider getProvider() {
+		if(entityManagerProvider == null){
+			if(persistenceUnit != null && !persistenceUnit.isEmpty()){
+				entityManagerProvider = new PersistenceUnitProvider(persistenceUnit);
+			}else{
+				HSQLDBProvider hsqldbProvider = new HSQLDBProvider();
+				hsqldbProvider.setSchema(schema);
+				hsqldbProvider.setEntities(getEntities());
+				hsqldbProvider.setShowSQL(showSQL);
+				entityManagerProvider = hsqldbProvider;
+			}
+		}
+		return entityManagerProvider;
 	}
 
 	private Set<Class<?>> getEntities() {
@@ -71,5 +97,7 @@ public class ConfigurationFactory {
 
 		return entities;
 	}
+
+	
 
 }
