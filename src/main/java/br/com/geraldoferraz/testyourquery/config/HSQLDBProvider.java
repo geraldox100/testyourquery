@@ -3,6 +3,10 @@ package br.com.geraldoferraz.testyourquery.config;
 import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.annotedWith;
 import static br.com.geraldoferraz.scanyourpath.searches.loaders.ClassPathLoaderTypes.full;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Properties;
 import java.util.Set;
 
@@ -12,13 +16,14 @@ import javax.persistence.EntityManagerFactory;
 import org.hibernate.ejb.Ejb3Configuration;
 
 import br.com.geraldoferraz.scanyourpath.Scanner;
-import br.com.geraldoferraz.testyourquery.util.ConnectionManager;
 
 public class HSQLDBProvider implements EntityManagerProvider {
 
 	private String schema;
 	private String showSQL = "false";
 	private Set<Class<?>> entities;
+	private static final String DRIVER = "org.hsqldb.jdbcDriver";
+	private static final String URL = "jdbc:hsqldb:mem:ctaTeste;";
 
 	@SuppressWarnings("deprecation")
 	public EntityManagerFactory getEntityManagerFactory() {
@@ -33,19 +38,35 @@ public class HSQLDBProvider implements EntityManagerProvider {
 
 		if (haveSchema()) {
 			try {
-				ConnectionManager cm = new ConnectionManager();
-				cm.executeStatement("CREATE SCHEMA " + schema + " AUTHORIZATION DBA;");
+				executeStatement("CREATE SCHEMA " + schema + " AUTHORIZATION DBA;");
 			} catch (Exception e) {
 			}
 		}
 
 		return config.createEntityManagerFactory();
 	}
+	
+	public void executeStatement(String statement) throws ClassNotFoundException, SQLException {
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		try {
+			Class.forName(DRIVER);
+			conn = DriverManager.getConnection(URL, "sa", "");
+			pstmt = conn.prepareStatement(statement);
+		} finally { 
+			if(pstmt != null){
+				pstmt.execute();
+			}
+			if(conn != null){
+				conn.close();
+			}
+		}
+	}
 
 	private Properties getProperties() {
 		Properties properties = new Properties();
-		properties.put("hibernate.connection.url", "jdbc:hsqldb:mem:ctaTeste;shutdown=true");
-		properties.put("hibernate.connection.driver_class", "org.hsqldb.jdbcDriver");
+		properties.put("hibernate.connection.url", URL+"shutdown=true;");
+		properties.put("hibernate.connection.driver_class", DRIVER);
 		properties.put("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
 		properties.put("hibernate.connection.username", "sa");
 		properties.put("hibernate.connection.password", "");
