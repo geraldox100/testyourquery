@@ -84,4 +84,11 @@ public class ConnectionManager {
 		return entityManagerProvider.getEntityManagerFactory();
 	}
 
+	public static Connection getConnection(EntityManager em) {
+		Session session = (Session) em.getDelegate();
+		@SuppressWarnings("deprecation")
+		Connection connection = (Connection) session.connection();
+		return connection;
+	}
+
 }
