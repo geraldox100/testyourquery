@@ -1,6 +1,6 @@
 package br.com.geraldoferraz.testyourquery.config;
 
-import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.annotedWith;
+import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.annotatedWith;
 import static br.com.geraldoferraz.scanyourpath.searches.loaders.ClassPathLoaderTypes.full;
 
 import java.sql.Connection;
@@ -90,7 +90,7 @@ public class HSQLDBProvider implements EntityManagerProvider {
 		} else {
 			Scanner scan = new Scanner();
 			scan.limitSearchingPathTo(full());
-			Set<Class<?>> entities = scan.allClasses(annotedWith(Entity.class)).anyWhere();
+			Set<Class<?>> entities = scan.allClasses(annotatedWith(Entity.class)).anyWhere();
 			return entities;
 		}
 	}

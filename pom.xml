@@ -81,7 +81,7 @@
 		<dependency>
 			<groupId>br.com.geraldoferraz</groupId>
 			<artifactId>scanyourpath</artifactId>
-			<version>1.1.1-SNAPSHOT</version>
+			<version>1.1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.shrinkwrap</groupId>

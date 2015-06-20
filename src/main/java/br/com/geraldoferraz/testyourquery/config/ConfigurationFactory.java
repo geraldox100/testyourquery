@@ -1,6 +1,6 @@
 package br.com.geraldoferraz.testyourquery.config;
 
-import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.annotedWith;
+import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.annotatedWith;
 import static br.com.geraldoferraz.scanyourpath.searches.loaders.ClassPathLoaderTypes.full;
 import static java.util.Arrays.asList;
 
@@ -16,7 +16,7 @@ public class ConfigurationFactory {
 
 	private String schema;
 	private String showSQL = "true";
-	private SessionMode sessionMode = SessionMode.PER_TEST;
+	private SessionMode sessionMode = SessionMode.PER_TEST_CASE;
 	private String basePackage;
 	private Set<Class<?>> entities = new HashSet<Class<?>>();
 	private EntityManagerProvider entityManagerProvider;
@@ -91,7 +91,7 @@ public class ConfigurationFactory {
 		if (basePackage != null && !basePackage.isEmpty()) {
 			Scanner scan = new Scanner();
 			scan.limitSearchingPathTo(full());
-			Set<Class<?>> entitiesFound = scan.allClasses(annotedWith(Entity.class)).startingIn(basePackage);
+			Set<Class<?>> entitiesFound = scan.allClasses(annotatedWith(Entity.class)).startingIn(basePackage);
 			entities.addAll(entitiesFound);
 		}
 
