@@ -15,17 +15,17 @@ import net.vidageek.mirror.list.dsl.Matcher;
 import net.vidageek.mirror.list.dsl.MirrorList;
 import br.com.geraldoferraz.testyourquery.annotations.Configurator;
 
-public class ClassRelector {
+public class ClassReflector {
 
 	private Mirror mirror = new Mirror();
 	private Class<?> clazz;
 
-	public ClassRelector(Class<?> clazz) {
+	public ClassReflector(Class<?> clazz) {
 		this.clazz = clazz;
 	}
 
 	public List<Field> getAnnotatedFields(Class<? extends Annotation> annotation) {
-		return mirror.on(clazz).reflectAll().fields().matching((ClassRelector.<Field>annotedWith(annotation)));
+		return mirror.on(clazz).reflectAll().fields().matching((ClassReflector.<Field>annotedWith(annotation)));
 	}
 
 	public MirrorList<Method> getMethodsMatching(Matcher<Method> matcher) {
@@ -37,7 +37,7 @@ public class ClassRelector {
 	}
 
 	public MirrorList<Method> getMethodsAnnotedWith(Class<Configurator> annotation) {
-		return mirror.on(clazz).reflectAll().methods().matching(ClassRelector.<Method>annotedWith(annotation));
+		return mirror.on(clazz).reflectAll().methods().matching(ClassReflector.<Method>annotedWith(annotation));
 	}
 	
 	private static <T extends AccessibleObject> Matcher<T> annotedWith(final Class<? extends Annotation> annotation) {

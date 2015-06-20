@@ -4,15 +4,14 @@ import java.lang.reflect.Method;
 
 import br.com.geraldoferraz.testyourquery.config.Configuration;
 import br.com.geraldoferraz.testyourquery.config.ConfigurationFactory;
-import br.com.geraldoferraz.testyourquery.config.SessionMode;
-import br.com.geraldoferraz.testyourquery.util.reflection.ClassRelector;
+import br.com.geraldoferraz.testyourquery.util.reflection.ClassReflector;
 
 public class RunnerFactory {
 
-	private ClassRelector classRelector;
+	private ClassReflector classReflector;
 	
 	public RunnerFactory(Class<?> clazz) {
-		classRelector = new ClassRelector(clazz);
+		classReflector = new ClassReflector(clazz);
 	}
 
 	public Runner createRunner() {
@@ -22,22 +21,18 @@ public class RunnerFactory {
 	}
 
 	private Runner resolveRunner(Configuration configuration) {
-		Runner runner;
-		if (SessionMode.PER_TEST_CASE.equals(configuration.getSessionMode())) {
-			runner = new RunnerSessionPerTestCase(classRelector,configuration);
-		}else{
-			runner = new RunnerSessionPerTest(classRelector, configuration);
-		}
+		
+		Runner runner = configuration.getSessionMode().newInstance(configuration, classReflector);
 		return runner;
 	}
 
 	private Configuration resolveConfiguration() {
 		Configuration configuration;
 		
-		Method method = classRelector.getConfiguratorMethod();
+		Method method = classReflector.getConfiguratorMethod();
 		
 		if (method != null) {
-			configuration = (Configuration) classRelector.invokeStatic(method);
+			configuration = (Configuration) classReflector.invokeStatic(method);
 		}else{
 			configuration = new ConfigurationFactory().build();
 		}

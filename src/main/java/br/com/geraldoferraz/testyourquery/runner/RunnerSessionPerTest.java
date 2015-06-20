@@ -11,19 +11,19 @@ import br.com.geraldoferraz.testyourquery.annotations.JDBCConnection;
 import br.com.geraldoferraz.testyourquery.config.Configuration;
 import br.com.geraldoferraz.testyourquery.config.ConfigurationFactory;
 import br.com.geraldoferraz.testyourquery.util.database.ConnectionManager;
-import br.com.geraldoferraz.testyourquery.util.reflection.ClassRelector;
+import br.com.geraldoferraz.testyourquery.util.reflection.ClassReflector;
 
 public class RunnerSessionPerTest implements Runner {
 
-	private ClassRelector clazzReflector;
+	private ClassReflector clazzReflector;
 	private ConnectionManager connectionManager;
 
-	public RunnerSessionPerTest(ClassRelector clazzReflector, Configuration configuration) {
+	public RunnerSessionPerTest(ClassReflector clazzReflector, Configuration configuration) {
 		this.clazzReflector = clazzReflector;
 		connectionManager = new ConnectionManager(configuration.getEntityManagerProvider());
 	}
 
-	public RunnerSessionPerTest(ClassRelector classRelector) {
+	public RunnerSessionPerTest(ClassReflector classRelector) {
 		this(classRelector, new ConfigurationFactory().build());
 	}
 
@@ -52,12 +52,12 @@ public class RunnerSessionPerTest implements Runner {
 		List<Field> fields = clazzReflector.getAnnotatedFields(Dao.class);
 		for (Field field : fields) {
 
-			Object daoObject = ClassRelector.newInstanceOf(field);
-			ClassRelector.injectOn(field, createdTest, daoObject);
+			Object daoObject = ClassReflector.newInstanceOf(field);
+			ClassReflector.injectOn(field, createdTest, daoObject);
 
-			List<Field> entityManagers = ClassRelector.getFieldsByType(EntityManager.class, daoObject);
+			List<Field> entityManagers = ClassReflector.getFieldsByType(EntityManager.class, daoObject);
 			for (Field entityManagerField : entityManagers) {
-				ClassRelector.injectOn(entityManagerField, daoObject, connectionManager.getNewEntityManager());
+				ClassReflector.injectOn(entityManagerField, daoObject, connectionManager.getNewEntityManager());
 			}
 		}
 	}
@@ -65,14 +65,14 @@ public class RunnerSessionPerTest implements Runner {
 	private void injectEntityManagerOn(Object createdTest) throws Exception {
 		List<Field> fields = clazzReflector.getAnnotatedFields(PersistenceContext.class);
 		for (Field field : fields) {
-			ClassRelector.injectOn(field, createdTest, connectionManager.getNewEntityManager());
+			ClassReflector.injectOn(field, createdTest, connectionManager.getNewEntityManager());
 		}
 	}
 
 	private void injectConnectionOn(Object createdTest) throws Exception {
 		List<Field> fields = clazzReflector.getAnnotatedFields(JDBCConnection.class);
 		for (Field field : fields) {
-			ClassRelector.injectOn(field, createdTest, connectionManager.getNewConnection());
+			ClassReflector.injectOn(field, createdTest, connectionManager.getNewConnection());
 		}
 	}
 

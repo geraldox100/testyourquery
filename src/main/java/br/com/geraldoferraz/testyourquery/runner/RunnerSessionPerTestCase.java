@@ -11,15 +11,15 @@ import br.com.geraldoferraz.testyourquery.annotations.Dao;
 import br.com.geraldoferraz.testyourquery.annotations.JDBCConnection;
 import br.com.geraldoferraz.testyourquery.config.Configuration;
 import br.com.geraldoferraz.testyourquery.util.database.ConnectionManager;
-import br.com.geraldoferraz.testyourquery.util.reflection.ClassRelector;
+import br.com.geraldoferraz.testyourquery.util.reflection.ClassReflector;
 
 public class RunnerSessionPerTestCase implements Runner {
 
-	private ClassRelector clazzReflector;
+	private ClassReflector clazzReflector;
 	private EntityManager em;
 	private Connection conn;
 
-	public RunnerSessionPerTestCase(ClassRelector clazzReflector, Configuration configuration) {
+	public RunnerSessionPerTestCase(ClassReflector clazzReflector, Configuration configuration) {
 		this.clazzReflector = clazzReflector;
 		em = new ConnectionManager(configuration.getEntityManagerProvider()).getNewEntityManager();
 		conn = ConnectionManager.getConnection(em);
@@ -53,12 +53,12 @@ public class RunnerSessionPerTestCase implements Runner {
 		List<Field> fields = clazzReflector.getAnnotatedFields(Dao.class);
 		for (Field field : fields) {
 
-			Object daoObject = ClassRelector.newInstanceOf(field);
-			ClassRelector.injectOn(field, createdTest, daoObject);
+			Object daoObject = ClassReflector.newInstanceOf(field);
+			ClassReflector.injectOn(field, createdTest, daoObject);
 
-			List<Field> entityManagers = ClassRelector.getFieldsByType(EntityManager.class, daoObject);
+			List<Field> entityManagers = ClassReflector.getFieldsByType(EntityManager.class, daoObject);
 			for (Field entityManagerField : entityManagers) {
-				ClassRelector.injectOn(entityManagerField, daoObject, em);
+				ClassReflector.injectOn(entityManagerField, daoObject, em);
 			}
 		}
 	}
@@ -66,14 +66,14 @@ public class RunnerSessionPerTestCase implements Runner {
 	private void injectEntityManagerOn(Object createdTest) throws Exception {
 		List<Field> fields = clazzReflector.getAnnotatedFields(PersistenceContext.class);
 		for (Field field : fields) {
-			ClassRelector.injectOn(field, createdTest, em);
+			ClassReflector.injectOn(field, createdTest, em);
 		}
 	}
 
 	private void injectConnectionOn(Object createdTest) throws Exception {
 		List<Field> fields = clazzReflector.getAnnotatedFields(JDBCConnection.class);
 		for (Field field : fields) {
-			ClassRelector.injectOn(field, createdTest, conn);
+			ClassReflector.injectOn(field, createdTest, conn);
 		}
 	}
 
