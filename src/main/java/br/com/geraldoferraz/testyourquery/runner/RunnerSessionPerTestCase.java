@@ -1,10 +1,12 @@
 package br.com.geraldoferraz.testyourquery.runner;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 import javax.persistence.EntityManager;
 
 import br.com.geraldoferraz.testyourquery.config.Configuration;
+import br.com.geraldoferraz.testyourquery.file.ScriptLoader;
 import br.com.geraldoferraz.testyourquery.util.database.ConnectionManager;
 import br.com.geraldoferraz.testyourquery.util.reflection.ClassReflector;
 
@@ -16,10 +18,18 @@ public class RunnerSessionPerTestCase implements Runner {
 	private EntityManagerConnectionInjector injector;
 
 	public RunnerSessionPerTestCase(ClassReflector clazzReflector, Configuration configuration) throws Exception {
-		em = new ConnectionManager(configuration.getEntityManagerProvider()).getNewEntityManager();
+		ConnectionManager connectionManager = new ConnectionManager(configuration.getEntityManagerProvider());
+		runScriptIfAny(configuration, connectionManager);
+		em = connectionManager.getNewEntityManager();
 		conn = ConnectionManager.getConnection(em);
 		initializeConnectionFactory();
 		initializeInjector(clazzReflector);
+	}
+
+	private void runScriptIfAny(Configuration configuration, ConnectionManager connectionManager) throws SQLException, Exception {
+		if (configuration.getScript() != null && !configuration.getScript().isEmpty()){
+			connectionManager.executeScript(new ScriptLoader(configuration.getScript()).load());
+		}
 	}
 	
 	private void initializeConnectionFactory() {

@@ -1,6 +1,7 @@
 package br.com.geraldoferraz.testyourquery.util.database;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,22 +20,30 @@ public class ConnectionManager {
 	
 	private List<Connection> connections = new ArrayList<Connection>();;
 	private List<EntityManager> entityManagers = new ArrayList<EntityManager>();
-	private EntityManagerFactory entityManagerFactory;
+	private EntityManagerFactory emf;
 	
 	public ConnectionManager(EntityManagerProvider entityManagerProvider) {
-		entityManagerFactory = entityManagerProvider.getEntityManagerFactory();
+		emf = entityManagerProvider.getEntityManagerFactory();
+	}
+	
+	public void executeScript(List<String> scripts) throws SQLException{
+		EntityManager em = getNewEntityManager();
+		for (String script : scripts) {
+//			em.createNativeQuery("{ call BEGIN " + script + " END }").executeUpdate();
+			em.createNativeQuery(script).executeUpdate();
+		}
 	}
 
 	@SuppressWarnings("deprecation")
 	public Connection getNewConnection() {
-		Session session = (Session) getEMF().createEntityManager().getDelegate();
+		Session session = (Session) emf.createEntityManager().getDelegate();
 		Connection connection = (Connection) session.connection();
 		saveReference(connection);
 		return connection;
 	}
 
 	public EntityManager getNewEntityManager() {
-		EntityManager em = getEMF().createEntityManager();
+		EntityManager em = emf.createEntityManager();
 		em.getTransaction().begin();
 		saveReference(em);
 		return em;
@@ -78,10 +87,6 @@ public class ConnectionManager {
 		entityManagers = new ArrayList<EntityManager>();
 	}
 
-	private EntityManagerFactory getEMF() {
-		return entityManagerFactory;
-	}
-
 	public static Connection getConnection(EntityManager em) {
 		Session session = (Session) em.getDelegate();
 		@SuppressWarnings("deprecation")
@@ -90,7 +95,7 @@ public class ConnectionManager {
 	}
 
 	public void clearData() {
-		Set<EntityType<?>> entities = getEMF().getMetamodel().getEntities();
+		Set<EntityType<?>> entities = emf.getMetamodel().getEntities();
 		Map<String, Boolean> estadoTabela = new HashMap<String, Boolean>();
 		for (EntityType<?> entityType : entities) {
 			estadoTabela.put(entityType.getName(), false);

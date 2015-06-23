@@ -23,7 +23,7 @@ public class HSQLDBProvider implements EntityManagerProvider {
 	private String showSQL = "false";
 	private Set<Class<?>> entities;
 	private static final String DRIVER = "org.hsqldb.jdbcDriver";
-	private static final String URL = "jdbc:hsqldb:mem:ctaTeste;";
+	private static final String URL = "jdbc:hsqldb:mem:testYourQueryDataBase;";
 	
 	@SuppressWarnings("deprecation")
 	public EntityManagerFactory getEntityManagerFactory() {
@@ -46,7 +46,7 @@ public class HSQLDBProvider implements EntityManagerProvider {
 		return config.createEntityManagerFactory();
 	}
 	
-	public void executeStatement(String statement) throws ClassNotFoundException, SQLException {
+	private void executeStatement(String statement) throws ClassNotFoundException, SQLException {
 		Connection conn = null;
 		PreparedStatement pstmt = null;
 		try {

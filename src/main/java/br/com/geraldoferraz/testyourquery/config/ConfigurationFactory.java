@@ -21,6 +21,7 @@ public class ConfigurationFactory {
 	private Set<Class<?>> entities = new HashSet<Class<?>>();
 	private EntityManagerProvider entityManagerProvider;
 	private String persistenceUnit;
+	private String script;
 
 	public ConfigurationFactory withSchema(String schema) {
 		this.schema = schema;
@@ -61,11 +62,17 @@ public class ConfigurationFactory {
 		this.persistenceUnit = persistenceUnit;
 		return this;
 	}
+	
+	public ConfigurationFactory runScript(String script) {
+		this.script = script;
+		return this;
+	}
 
 	public Configuration build() {
 		Configuration configuration = new Configuration();
 		configuration.setSessionMode(sessionMode);
 		configuration.setEntityManagerProvider(getProvider());
+		configuration.setScript(script);
 		return configuration;
 	}
 
@@ -97,6 +104,8 @@ public class ConfigurationFactory {
 
 		return entities;
 	}
+
+	
 
 	
 
