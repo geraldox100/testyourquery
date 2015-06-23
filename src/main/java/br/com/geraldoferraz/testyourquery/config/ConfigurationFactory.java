@@ -27,8 +27,8 @@ public class ConfigurationFactory {
 		return this;
 	}
 
-	public ConfigurationFactory shouldShowSQL(String showSQL) {
-		this.showSQL = showSQL;
+	public ConfigurationFactory shouldShowSQL() {
+		this.showSQL = "true";
 		return this;
 	}
 

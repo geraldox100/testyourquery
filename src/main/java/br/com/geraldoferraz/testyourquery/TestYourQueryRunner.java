@@ -1,5 +1,6 @@
 package br.com.geraldoferraz.testyourquery;
 
+import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
@@ -19,9 +20,14 @@ public class TestYourQueryRunner extends BlockJUnit4ClassRunner {
 
 	@Override
 	protected void runChild(FrameworkMethod method, RunNotifier notifier) {
-		runner.beforeRunTest();
-		super.runChild(method, notifier);
-		runner.afterRunTest();
+		Description description = describeChild(method);
+		if (isIgnored(method)) {
+            notifier.fireTestIgnored(description);
+        } else {
+        	runner.beforeRunTest();
+        	runLeaf(methodBlock(method), description, notifier);
+        	runner.afterRunTest();
+        }
 	}
 
 	@Override
@@ -30,9 +36,6 @@ public class TestYourQueryRunner extends BlockJUnit4ClassRunner {
 		runner.testObjectCreated(testObject);
 		return testObject;
 	}
-
-
-
-
+	
 
 }

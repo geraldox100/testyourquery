@@ -8,6 +8,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import net.vidageek.mirror.dsl.Mirror;
@@ -23,11 +24,36 @@ public class ClassReflector {
 	public ClassReflector(Class<?> clazz) {
 		this.clazz = clazz;
 	}
-
-	public List<Field> getAnnotatedFields(Class<? extends Annotation> annotation) {
-		return mirror.on(clazz).reflectAll().fields().matching((ClassReflector.<Field>annotedWith(annotation)));
+	
+	public Class<?> getJavaClass(){
+		return this.clazz;
 	}
 
+	public List<Field> getAnnotatedInstanceFields(Class<? extends Annotation> annotation) {
+		List<Field> annotatedFields = getAnnotatedFields(annotation);
+		annotatedFields = filterStaticFields(annotatedFields);
+		return annotatedFields;
+	}
+
+	private List<Field> filterStaticFields(List<Field> annotatedFields) {
+		return remove(annotatedFields,true);
+	}
+
+	public List<Field> getAnnotatedStaticFields(Class<? extends Annotation> annotation) {
+		List<Field> annotatedFields =  getAnnotatedFields(annotation);
+		annotatedFields = filterNonStaticFields(annotatedFields);
+		return annotatedFields;
+	}
+
+	private List<Field> filterNonStaticFields(List<Field> annotatedFields) {
+		return remove(annotatedFields,false);
+	}
+	
+	private List<Field> getAnnotatedFields(Class<? extends Annotation> annotation) {
+		List<Field> annotatedFields =  mirror.on(clazz).reflectAll().fields().matching((ClassReflector.<Field>annotedWith(annotation)));
+		return annotatedFields;
+	}
+	
 	public MirrorList<Method> getMethodsMatching(Matcher<Method> matcher) {
 		return mirror.on(clazz).reflectAll().methods().matching(matcher);
 	}
@@ -101,6 +127,27 @@ public class ClassReflector {
 
 	public static Object newInstanceOf(Field field) throws InstantiationException, IllegalAccessException {
 		return field.getType().newInstance();
+	}
+
+	public static void injectStaticOn(Field field, Class<?> clazz, Object value) {
+		new Mirror().on(clazz).set().field(field).withValue(value);
+	}
+	
+	private List<Field> remove(List<Field> annotatedFields, boolean b) {
+		List<Field> retorno = new ArrayList<Field>();
+		for (Field field : annotatedFields) {
+			if(b){
+				if(!isStatic(field.getModifiers())){
+					retorno.add(field);
+				}
+			}else{
+				if(isStatic(field.getModifiers())){
+					retorno.add(field);
+				}
+			}
+		}
+		return retorno;
+		
 	}
 
 }

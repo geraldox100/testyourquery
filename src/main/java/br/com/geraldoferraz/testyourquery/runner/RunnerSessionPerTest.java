@@ -1,29 +1,48 @@
 package br.com.geraldoferraz.testyourquery.runner;
 
-import java.lang.reflect.Field;
-import java.util.List;
+import java.sql.Connection;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
-import br.com.geraldoferraz.testyourquery.annotations.Dao;
-import br.com.geraldoferraz.testyourquery.annotations.JDBCConnection;
 import br.com.geraldoferraz.testyourquery.config.Configuration;
 import br.com.geraldoferraz.testyourquery.config.ConfigurationFactory;
 import br.com.geraldoferraz.testyourquery.util.database.ConnectionManager;
 import br.com.geraldoferraz.testyourquery.util.reflection.ClassReflector;
 
-public class RunnerSessionPerTest implements Runner {
-
-	private ClassReflector clazzReflector;
+public class RunnerSessionPerTest implements Runner{
 	private ConnectionManager connectionManager;
+	private ConnectionFactory connectionFactory;
+	private EntityManagerConnectionInjector injector;
 
-	public RunnerSessionPerTest(ClassReflector clazzReflector, Configuration configuration) {
-		this.clazzReflector = clazzReflector;
+	public RunnerSessionPerTest(ClassReflector clazzReflector, Configuration configuration) throws Exception {
+		inistializeConnectionManager(configuration);
+		initializeConnectionFactory();
+		initializeInjector(clazzReflector);
+	}
+	
+	private void inistializeConnectionManager(Configuration configuration) {
 		connectionManager = new ConnectionManager(configuration.getEntityManagerProvider());
 	}
 
-	public RunnerSessionPerTest(ClassReflector classRelector) {
+	private void initializeConnectionFactory() {
+		connectionFactory = new ConnectionFactory() {
+			
+			public EntityManager getEntityManager() {
+				return connectionManager.getNewEntityManager();
+			}
+			
+			public Connection getConnection() {
+				return connectionManager.getNewConnection();
+			}
+		};
+		
+	}
+	
+	private void initializeInjector(ClassReflector clazzReflector) throws Exception {
+		injector = new EntityManagerConnectionInjector(clazzReflector, connectionFactory);
+	}
+
+	public RunnerSessionPerTest(ClassReflector classRelector) throws Exception {
 		this(classRelector, new ConfigurationFactory().build());
 	}
 
@@ -32,47 +51,14 @@ public class RunnerSessionPerTest implements Runner {
 
 	public void afterRunTest() {
 		connectionManager.freeMemorySpace();
+		connectionManager.clearData();
 	}
 
 	public void testObjectCreated(Object testObject) {
 		try {
-			injectDependenciesOn(testObject);
+			injector.injectOn(testObject);
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-	}
-
-	private void injectDependenciesOn(Object createdTest) throws Exception {
-		injectEntityManagerOn(createdTest);
-		injectConnectionOn(createdTest);
-		injectEntityManagerOnDAOs(createdTest);
-	}
-
-	private void injectEntityManagerOnDAOs(Object createdTest) throws Exception {
-		List<Field> fields = clazzReflector.getAnnotatedFields(Dao.class);
-		for (Field field : fields) {
-
-			Object daoObject = ClassReflector.newInstanceOf(field);
-			ClassReflector.injectOn(field, createdTest, daoObject);
-
-			List<Field> entityManagers = ClassReflector.getFieldsByType(EntityManager.class, daoObject);
-			for (Field entityManagerField : entityManagers) {
-				ClassReflector.injectOn(entityManagerField, daoObject, connectionManager.getNewEntityManager());
-			}
-		}
-	}
-
-	private void injectEntityManagerOn(Object createdTest) throws Exception {
-		List<Field> fields = clazzReflector.getAnnotatedFields(PersistenceContext.class);
-		for (Field field : fields) {
-			ClassReflector.injectOn(field, createdTest, connectionManager.getNewEntityManager());
-		}
-	}
-
-	private void injectConnectionOn(Object createdTest) throws Exception {
-		List<Field> fields = clazzReflector.getAnnotatedFields(JDBCConnection.class);
-		for (Field field : fields) {
-			ClassReflector.injectOn(field, createdTest, connectionManager.getNewConnection());
 		}
 	}
 

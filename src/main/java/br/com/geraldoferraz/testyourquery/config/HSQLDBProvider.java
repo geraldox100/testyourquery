@@ -24,7 +24,7 @@ public class HSQLDBProvider implements EntityManagerProvider {
 	private Set<Class<?>> entities;
 	private static final String DRIVER = "org.hsqldb.jdbcDriver";
 	private static final String URL = "jdbc:hsqldb:mem:ctaTeste;";
-
+	
 	@SuppressWarnings("deprecation")
 	public EntityManagerFactory getEntityManagerFactory() {
 		Ejb3Configuration config = new Ejb3Configuration();

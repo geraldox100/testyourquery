@@ -2,10 +2,14 @@ package br.com.geraldoferraz.testyourquery.util.database;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.Session;
 
@@ -15,10 +19,10 @@ public class ConnectionManager {
 	
 	private List<Connection> connections = new ArrayList<Connection>();;
 	private List<EntityManager> entityManagers = new ArrayList<EntityManager>();
-	private EntityManagerProvider entityManagerProvider;
+	private EntityManagerFactory entityManagerFactory;
 	
 	public ConnectionManager(EntityManagerProvider entityManagerProvider) {
-		this.entityManagerProvider = entityManagerProvider;
+		entityManagerFactory = entityManagerProvider.getEntityManagerFactory();
 	}
 
 	@SuppressWarnings("deprecation")
@@ -47,15 +51,9 @@ public class ConnectionManager {
 	public void freeMemorySpace() {
 		closeEntityManagers();
 		closeConnections();
-		clearEntityManagerFactory();
 		System.gc();
 	}
 
-	private void clearEntityManagerFactory() {
-		if (getEMF() != null) {
-			getEMF().close();
-		}
-	}
 
 	private void closeConnections() {
 		for (Connection conn : connections) {
@@ -81,7 +79,7 @@ public class ConnectionManager {
 	}
 
 	private EntityManagerFactory getEMF() {
-		return entityManagerProvider.getEntityManagerFactory();
+		return entityManagerFactory;
 	}
 
 	public static Connection getConnection(EntityManager em) {
@@ -89,6 +87,38 @@ public class ConnectionManager {
 		@SuppressWarnings("deprecation")
 		Connection connection = (Connection) session.connection();
 		return connection;
+	}
+
+	public void clearData() {
+		Set<EntityType<?>> entities = getEMF().getMetamodel().getEntities();
+		Map<String, Boolean> estadoTabela = new HashMap<String, Boolean>();
+		for (EntityType<?> entityType : entities) {
+			estadoTabela.put(entityType.getName(), false);
+		}
+		
+		Set<String> keySet = estadoTabela.keySet();
+		while(tabelaPossuiAlguemSemExcluir(estadoTabela)){
+			for (String tabela : keySet) {
+				try {
+					if(estadoTabela.get(tabela) == false){
+						getNewEntityManager().createQuery("delete from " + tabela).executeUpdate();
+						estadoTabela.put(tabela, true);
+					}
+				} catch (Exception e) {
+				}
+			}
+		}
+	}
+	
+	private static boolean tabelaPossuiAlguemSemExcluir(Map<String, Boolean> estadoTabela) {
+		Set<String> keySet = estadoTabela.keySet();
+		for (String tabela : keySet) {
+			Boolean excluido = estadoTabela.get(tabela);
+			if(!excluido){
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
