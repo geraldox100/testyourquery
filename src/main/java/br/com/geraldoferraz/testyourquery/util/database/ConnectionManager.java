@@ -29,7 +29,6 @@ public class ConnectionManager {
 	public void executeScript(List<String> scripts) throws SQLException{
 		EntityManager em = getNewEntityManager();
 		for (String script : scripts) {
-//			em.createNativeQuery("{ call BEGIN " + script + " END }").executeUpdate();
 			em.createNativeQuery(script).executeUpdate();
 		}
 	}

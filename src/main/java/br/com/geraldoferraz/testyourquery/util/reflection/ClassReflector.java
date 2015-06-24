@@ -8,7 +8,6 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import net.vidageek.mirror.dsl.Mirror;
@@ -148,6 +147,10 @@ public class ClassReflector {
 		}
 		return retorno;
 		
+	}
+
+	public Object createInstance() throws InstantiationException, IllegalAccessException {
+		return clazz.newInstance();
 	}
 
 }

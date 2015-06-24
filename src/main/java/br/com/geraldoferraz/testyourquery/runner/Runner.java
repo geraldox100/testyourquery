@@ -1,13 +1,15 @@
 package br.com.geraldoferraz.testyourquery.runner;
 
+import org.junit.runners.model.FrameworkMethod;
+
 
 public interface Runner {
 
-	void beforeRunTest();
+	void beforeRunTest(FrameworkMethod method);
 
 	void afterRunTest();
 
-	void testObjectCreated(Object testObject);
+	Object createTestObject();
 
 
 }

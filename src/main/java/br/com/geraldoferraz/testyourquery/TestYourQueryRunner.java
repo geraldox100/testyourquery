@@ -24,7 +24,7 @@ public class TestYourQueryRunner extends BlockJUnit4ClassRunner {
 		if (isIgnored(method)) {
             notifier.fireTestIgnored(description);
         } else {
-        	runner.beforeRunTest();
+        	runner.beforeRunTest(method);
         	runLeaf(methodBlock(method), description, notifier);
         	runner.afterRunTest();
         }
@@ -32,9 +32,7 @@ public class TestYourQueryRunner extends BlockJUnit4ClassRunner {
 
 	@Override
 	protected Object createTest() throws Exception {
-		Object testObject = getTestClass().getOnlyConstructor().newInstance();
-		runner.testObjectCreated(testObject);
-		return testObject;
+		return runner.createTestObject();
 	}
 	
 

@@ -5,9 +5,13 @@ import java.sql.SQLException;
 
 import javax.persistence.EntityManager;
 
+import org.junit.runners.model.FrameworkMethod;
+
+import br.com.geraldoferraz.testyourquery.annotations.MassPreparer;
 import br.com.geraldoferraz.testyourquery.config.Configuration;
 import br.com.geraldoferraz.testyourquery.config.ConfigurationFactory;
 import br.com.geraldoferraz.testyourquery.file.ScriptLoader;
+import br.com.geraldoferraz.testyourquery.util.ScriptRunner;
 import br.com.geraldoferraz.testyourquery.util.database.ConnectionManager;
 import br.com.geraldoferraz.testyourquery.util.reflection.ClassReflector;
 
@@ -16,12 +20,14 @@ public class RunnerSessionPerTest implements Runner {
 	private ConnectionFactory connectionFactory;
 	private EntityManagerConnectionInjector injector;
 	private Configuration configuration;
+	private ClassReflector clazzReflector;
 
 	public RunnerSessionPerTest(ClassReflector clazzReflector, Configuration configuration) throws Exception {
+		this.clazzReflector = clazzReflector;
 		this.configuration = configuration;
 		inistializeConnectionManager();
 		initializeConnectionFactory();
-		initializeInjector(clazzReflector);
+		initializeInjector();
 	}
 
 	private void inistializeConnectionManager() throws Exception {
@@ -42,7 +48,7 @@ public class RunnerSessionPerTest implements Runner {
 
 	}
 
-	private void initializeInjector(ClassReflector clazzReflector) throws Exception {
+	private void initializeInjector() throws Exception {
 		injector = new EntityManagerConnectionInjector(clazzReflector, connectionFactory);
 	}
 
@@ -50,7 +56,20 @@ public class RunnerSessionPerTest implements Runner {
 		this(classRelector, new ConfigurationFactory().build());
 	}
 
-	public void beforeRunTest() {
+	public void beforeRunTest(FrameworkMethod method) {
+		connectionManager.clearData();
+		MassPreparer massPreparer = method.getAnnotation(MassPreparer.class);
+		if(massPreparer != null){
+			Class<? extends ScriptRunner> scriptRunnerClass = massPreparer.value();
+			if(scriptRunnerClass != null){
+				try {
+					ScriptRunner scriptRunner = scriptRunnerClass.newInstance();
+					scriptRunner.run(connectionFactory.getEntityManager());
+				} catch (Exception e) {
+					e.printStackTrace();
+				} 
+			}
+		}
 		try {
 			runScriptIfAny(configuration);
 		} catch (Exception e) {
@@ -65,15 +84,17 @@ public class RunnerSessionPerTest implements Runner {
 
 	public void afterRunTest() {
 		connectionManager.freeMemorySpace();
-		connectionManager.clearData();
 	}
 
-	public void testObjectCreated(Object testObject) {
+	public Object createTestObject() {
 		try {
+			Object testObject = clazzReflector.createInstance();
 			injector.injectOn(testObject);
+			return testObject;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return null;
 	}
 
 }

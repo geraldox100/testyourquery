@@ -26,6 +26,10 @@ public class EntityManagerConnectionInjector {
 
 	protected void injectOn(Object createdTest) throws Exception {
 		this.createdTest = createdTest;
+		injectEntityManagerOnStaticFields();
+		injectConnectionOnStaticFields();
+		injectEntityManagerOnStaticDAOs();
+		
 		injectEntityManagerOnInstanceFields();
 		injectConnectionOnInstanceFields();
 		injectEntityManagerOnInstanceDAOs();
