@@ -9,6 +9,8 @@ I looked for tools that would allow me to easily simulate a database, and even f
 
 So I decided to create an integrated framework to JUnit that would allow me to easily create a database, create test mass, run my queries and test the results.
 
+Take a look on <a href="https://github.com/geraldox100/testyourquery-test">this</a> project for usage examples.
+
 Usage
 --
 
