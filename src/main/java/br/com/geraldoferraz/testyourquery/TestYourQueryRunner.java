@@ -12,9 +12,11 @@ import br.com.geraldoferraz.testyourquery.runner.RunnerFactory;
 public class TestYourQueryRunner extends BlockJUnit4ClassRunner {
 	
 	private Runner runner;
+//	private Logger log = Logger.getLogger(TestYourQueryRunner.class);
 
 	public TestYourQueryRunner(Class<?> klass) throws InitializationError {
 		super(klass);
+//		log.debug("Initializing");
 		runner = new RunnerFactory(getTestClass().getJavaClass()).createRunner();
 	}
 
@@ -22,9 +24,11 @@ public class TestYourQueryRunner extends BlockJUnit4ClassRunner {
 	protected void runChild(FrameworkMethod method, RunNotifier notifier) {
 		Description description = describeChild(method);
 		if (isIgnored(method)) {
+//			log.debug("Test: "+method.getName()+" ignored");
             notifier.fireTestIgnored(description);
         } else {
         	runner.beforeRunTest(method);
+//        	log.debug("Start Test");
         	runLeaf(methodBlock(method), description, notifier);
         	runner.afterRunTest();
         }

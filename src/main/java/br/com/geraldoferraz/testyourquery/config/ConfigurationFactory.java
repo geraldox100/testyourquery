@@ -15,7 +15,7 @@ import br.com.geraldoferraz.testyourquery.config.provider.PersistenceUnitProvide
 public class ConfigurationFactory {
 
 	private String schema;
-	private String showSQL = "true";
+	private String showSQL = "false";
 	private SessionMode sessionMode = SessionMode.PER_TEST_CASE;
 	private String basePackage;
 	private Set<Class<?>> entities = new HashSet<Class<?>>();

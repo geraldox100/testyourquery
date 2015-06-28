@@ -57,6 +57,10 @@ public class RunnerSessionPerTestCase implements Runner {
 	}
 
 	public void beforeRunTest(FrameworkMethod method) {
+		if(!em.getTransaction().isActive()){
+			em.getTransaction().begin();
+		}
+		
 		MassPreparer massPreparer = method.getAnnotation(MassPreparer.class);
 		if(massPreparer != null){
 			Class<? extends ScriptRunner> scriptRunnerClass = massPreparer.value();
@@ -69,8 +73,7 @@ public class RunnerSessionPerTestCase implements Runner {
 				} 
 			}
 		}
-		if(!em.getTransaction().isActive())
-			em.getTransaction().begin();
+		
 	}
 
 	public void afterRunTest() {
