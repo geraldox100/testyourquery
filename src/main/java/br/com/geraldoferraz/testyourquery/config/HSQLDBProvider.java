@@ -104,7 +104,7 @@ public class HSQLDBProvider implements EntityManagerProvider {
 	}
 
 	private boolean notEmpty(String string) {
-		return string != null && !string.isEmpty();
+		return string != null && !(string.length() == 0);
 	}
 
 	public void setSchema(String schema) {

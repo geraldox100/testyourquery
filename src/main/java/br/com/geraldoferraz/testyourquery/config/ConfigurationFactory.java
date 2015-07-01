@@ -78,7 +78,7 @@ public class ConfigurationFactory {
 
 	private EntityManagerProvider getProvider() {
 		if(entityManagerProvider == null){
-			if(persistenceUnit != null && !persistenceUnit.isEmpty()){
+			if(persistenceUnit != null && !(persistenceUnit.length() == 0)){
 				entityManagerProvider = new PersistenceUnitProvider(persistenceUnit);
 			}else{
 				HSQLDBProvider hsqldbProvider = new HSQLDBProvider();
@@ -95,7 +95,7 @@ public class ConfigurationFactory {
 		Set<Class<?>> entities = new HashSet<Class<?>>();
 		entities.addAll(this.entities);
 
-		if (basePackage != null && !basePackage.isEmpty()) {
+		if (basePackage != null && !(basePackage.length() == 0)) {
 			Scanner scan = new Scanner();
 			scan.limitSearchingPathTo(full());
 			Set<Class<?>> entitiesFound = scan.allClasses(annotatedWith(Entity.class)).startingIn(basePackage);

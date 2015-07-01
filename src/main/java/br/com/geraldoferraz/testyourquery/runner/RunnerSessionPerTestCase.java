@@ -33,7 +33,7 @@ public class RunnerSessionPerTestCase implements Runner {
 	}
 
 	private void runScriptIfAny(Configuration configuration, ConnectionManager connectionManager) throws SQLException, Exception {
-		if (configuration.getScript() != null && !configuration.getScript().isEmpty()){
+		if (configuration.getScript() != null && !(configuration.getScript().length() == 0)){
 			connectionManager.executeScript(new ScriptLoader(configuration.getScript()).load());
 		}
 	}
