@@ -7,15 +7,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
-
-import org.hibernate.ejb.Ejb3Configuration;
+import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import br.com.geraldoferraz.scanyourpath.Scanner;
+import br.com.geraldoferraz.testyourquery.util.RuntimePersistenceGenerator;
 
 public class HSQLDBProvider implements EntityManagerProvider {
 
@@ -25,15 +24,14 @@ public class HSQLDBProvider implements EntityManagerProvider {
 	private static final String DRIVER = "org.hsqldb.jdbcDriver";
 	private static final String URL = "jdbc:hsqldb:mem:testYourQueryDataBase;";
 	
-	@SuppressWarnings("deprecation")
 	public EntityManagerFactory getEntityManagerFactory() {
-		Ejb3Configuration config = new Ejb3Configuration();
+		RuntimePersistenceGenerator generator = new RuntimePersistenceGenerator("test", PersistenceUnitTransactionType.RESOURCE_LOCAL, "org.hibernate.ejb.HibernatePersistence");
+		
+        setProperties(generator);
 
-		config.setProperties(getProperties());
-
-		Set<Class<?>> annotedClasses = getAnnotedClasses();
-		for (Class<?> annotedClass : annotedClasses) {
-			config.addAnnotatedClass(annotedClass);
+		Set<Class<?>> annotated = getAnnotedClasses();
+		for (Class<?> annotatedClass : annotated) {
+			generator.addAnnotatedClass(annotatedClass);
 		}
 
 		if (haveSchema()) {
@@ -42,8 +40,7 @@ public class HSQLDBProvider implements EntityManagerProvider {
 			} catch (Exception e) {
 			}
 		}
-
-		return config.createEntityManagerFactory();
+		return generator.createEntityManagerFactory();
 	}
 	
 	private void executeStatement(String statement) throws ClassNotFoundException, SQLException {
@@ -62,27 +59,27 @@ public class HSQLDBProvider implements EntityManagerProvider {
 			}
 		}
 	}
-
-	private Properties getProperties() {
-		Properties properties = new Properties();
-		properties.put("hibernate.connection.url", URL+"shutdown=true;");
-		properties.put("hibernate.connection.driver_class", DRIVER);
-		properties.put("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
-		properties.put("hibernate.connection.username", "sa");
-		properties.put("hibernate.connection.password", "");
-		properties.put("hibernate.connection.shutdown", "true");
-		properties.put("hibernate.connection.autocommit", "true");
-		properties.put("hibernate.jdbc.batch_size", 0);
-		properties.put("hibernate.hbm2ddl.auto", "create-drop");
+	
+	private void setProperties(RuntimePersistenceGenerator generator) {
+		generator.addProperty("hibernate.connection.url", URL+"shutdown=true;");
+		generator.addProperty("hibernate.connection.driver_class", DRIVER);
+		generator.addProperty("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
+		generator.addProperty("hibernate.connection.username", "sa");
+		generator.addProperty("hibernate.connection.password", "");
+		generator.addProperty("hibernate.connection.shutdown", "true");
+		generator.addProperty("hibernate.connection.autocommit", "true");
+		generator.addProperty("hibernate.jdbc.batch_size", "0");
+		generator.addProperty("hibernate.hbm2ddl.auto", "create-drop");
 
 		if (haveSchema()) {
-			properties.put("hibernate.default_schema", schema);
+			generator.addProperty("hibernate.default_schema", schema);
 		}
 
-		properties.put("hibernate.show_sql", showSQL);
-		properties.put("hibernate.format_sql", "true");
-		return properties;
+		generator.addProperty("hibernate.show_sql", showSQL);
+		generator.addProperty("hibernate.format_sql", "true");
 	}
+	
+	
 
 	private Set<Class<?>> getAnnotedClasses() {
 		if (haveEntities()) {
@@ -118,5 +115,5 @@ public class HSQLDBProvider implements EntityManagerProvider {
 	public void setEntities(Set<Class<?>> entities) {
 		this.entities = entities;
 	}
-
+	
 }

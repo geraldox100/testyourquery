@@ -33,10 +33,8 @@ public class ConnectionManager {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	public Connection getNewConnection() {
-		Session session = (Session) emf.createEntityManager().getDelegate();
-		Connection connection = (Connection) session.connection();
+		Connection connection = emf.createEntityManager().unwrap(java.sql.Connection.class);
 		saveReference(connection);
 		return connection;
 	}
@@ -86,11 +84,14 @@ public class ConnectionManager {
 		entityManagers = new ArrayList<EntityManager>();
 	}
 
+	@SuppressWarnings("deprecation")
 	public static Connection getConnection(EntityManager em) {
-		Session session = (Session) em.getDelegate();
-		@SuppressWarnings("deprecation")
-		Connection connection = (Connection) session.connection();
-		return connection;
+		try{
+			return em.unwrap(java.sql.Connection.class);
+		}catch(Exception e){
+			Session session = (Session) em.getDelegate();
+			return session.connection();
+		}
 	}
 
 	public void clearData() {
