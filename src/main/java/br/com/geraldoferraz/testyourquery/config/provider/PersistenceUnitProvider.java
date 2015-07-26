@@ -9,13 +9,22 @@ public class PersistenceUnitProvider implements EntityManagerProvider {
 	
 	
 	private String persistenceUnit;
+	private EntityManagerFactory createEntityManagerFactory;
+	
 
 	public PersistenceUnitProvider(String persistenceUnit) {
 		this.persistenceUnit = persistenceUnit;
 	}
 
 	public EntityManagerFactory getEntityManagerFactory() {
-		return Persistence.createEntityManagerFactory(persistenceUnit);
+		if(createEntityManagerFactory == null){
+			createEntityManagerFactory = Persistence.createEntityManagerFactory(persistenceUnit);
+		}
+		return createEntityManagerFactory;
+	}
+
+	public String getPersistenceUnit() {
+		return persistenceUnit;
 	}
 
 }

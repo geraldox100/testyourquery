@@ -1,6 +1,8 @@
 package br.com.geraldoferraz.testyourquery.config;
 
 import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.annotatedWith;
+import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.namedWith;
+import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.thatImplements;
 import static br.com.geraldoferraz.scanyourpath.searches.loaders.ClassPathLoaderTypes.full;
 
 import java.sql.Connection;
@@ -11,6 +13,7 @@ import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import br.com.geraldoferraz.scanyourpath.Scanner;
@@ -23,26 +26,48 @@ public class HSQLDBProvider implements EntityManagerProvider {
 	private Set<Class<?>> entities;
 	private static final String DRIVER = "org.hsqldb.jdbcDriver";
 	private static final String URL = "jdbc:hsqldb:mem:testYourQueryDataBase;";
-	
-	public EntityManagerFactory getEntityManagerFactory() {
-		RuntimePersistenceGenerator generator = new RuntimePersistenceGenerator("test", PersistenceUnitTransactionType.RESOURCE_LOCAL, "org.hibernate.ejb.HibernatePersistence");
-		
-        setProperties(generator);
+	private static Scanner scan = new Scanner();
+	private RuntimePersistenceGenerator generator;
 
-		Set<Class<?>> annotated = getAnnotedClasses();
-		for (Class<?> annotatedClass : annotated) {
+	public HSQLDBProvider() {
+		scan.limitSearchingPathTo(full());
+		generator = new RuntimePersistenceGenerator("test", PersistenceUnitTransactionType.RESOURCE_LOCAL, getProvider());
+		setProperties(generator);
+		
+		generateAnnotedClasses();
+		for (Class<?> annotatedClass : entities) {
 			generator.addAnnotatedClass(annotatedClass);
 		}
-
+		
 		if (haveSchema()) {
 			try {
 				executeStatement("CREATE SCHEMA " + schema + " AUTHORIZATION DBA;");
 			} catch (Exception e) {
 			}
 		}
+	}
+
+	public EntityManagerFactory getEntityManagerFactory() {
+
 		return generator.createEntityManagerFactory();
 	}
-	
+
+	private String getProvider() {
+		Set<Class<?>> providers = scan.allClasses(
+				thatImplements(PersistenceProvider.class)
+				.or(namedWith("org.hibernate.ejb.HibernatePersistence"))
+				.or(namedWith("org.apache.openjpa.persistence.PersistenceProviderImpl"))
+				.or(namedWith("org.eclipse.persistence.jpa.PersistenceProvider"))
+			).anyWhere();
+		if (providers.size() > 0) {
+			Class<?> provider = providers.iterator().next();
+			return provider.getName();
+		} else {
+			return "org.hibernate.ejb.HibernatePersistence";
+		}
+
+	}
+
 	private void executeStatement(String statement) throws ClassNotFoundException, SQLException {
 		Connection conn = null;
 		PreparedStatement pstmt = null;
@@ -50,18 +75,18 @@ public class HSQLDBProvider implements EntityManagerProvider {
 			Class.forName(DRIVER);
 			conn = DriverManager.getConnection(URL, "sa", "");
 			pstmt = conn.prepareStatement(statement);
-		} finally { 
-			if(pstmt != null){
+		} finally {
+			if (pstmt != null) {
 				pstmt.execute();
 			}
-			if(conn != null){
+			if (conn != null) {
 				conn.close();
 			}
 		}
 	}
-	
+
 	private void setProperties(RuntimePersistenceGenerator generator) {
-		generator.addProperty("hibernate.connection.url", URL+"shutdown=true;");
+		generator.addProperty("hibernate.connection.url", URL + "shutdown=true;");
 		generator.addProperty("hibernate.connection.driver_class", DRIVER);
 		generator.addProperty("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
 		generator.addProperty("hibernate.connection.username", "sa");
@@ -78,17 +103,10 @@ public class HSQLDBProvider implements EntityManagerProvider {
 		generator.addProperty("hibernate.show_sql", showSQL);
 		generator.addProperty("hibernate.format_sql", "true");
 	}
-	
-	
 
-	private Set<Class<?>> getAnnotedClasses() {
-		if (haveEntities()) {
-			return entities;
-		} else {
-			Scanner scan = new Scanner();
-			scan.limitSearchingPathTo(full());
-			Set<Class<?>> entities = scan.allClasses(annotatedWith(Entity.class)).anyWhere();
-			return entities;
+	private void generateAnnotedClasses() {
+		if (!haveEntities()) {
+			entities = scan.allClasses(annotatedWith(Entity.class)).anyWhere();
 		}
 	}
 
@@ -115,5 +133,22 @@ public class HSQLDBProvider implements EntityManagerProvider {
 	public void setEntities(Set<Class<?>> entities) {
 		this.entities = entities;
 	}
-	
+
+	public Connection getJDBCConnection() {
+		try {
+			return DriverManager.getConnection(URL, "sa", "");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public Set<Class<?>> getEntities() {
+		return entities;
+	}
+
+	public String getPersistenceUnit() {
+		return "test";
+	}
+
 }

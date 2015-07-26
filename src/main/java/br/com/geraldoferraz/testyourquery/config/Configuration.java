@@ -4,7 +4,7 @@ package br.com.geraldoferraz.testyourquery.config;
 public class Configuration {
 
 	private SessionMode sessionMode;
-	private EntityManagerProvider entityManagerProvider;
+	private DefaultEntityManagerProvider entityManagerProvider;
 	private String script;
 
 	public SessionMode getSessionMode() {
@@ -16,10 +16,10 @@ public class Configuration {
 	}
 
 	public void setEntityManagerProvider(EntityManagerProvider entityManagerProvider) {
-		this.entityManagerProvider = entityManagerProvider;
+		this.entityManagerProvider = new DefaultEntityManagerProvider(entityManagerProvider);
 	}
 
-	public EntityManagerProvider getEntityManagerProvider() {
+	public DefaultEntityManagerProvider getEntityManagerProvider() {
 		return entityManagerProvider;
 	}
 

@@ -48,6 +48,12 @@ public class RuntimePersistenceGenerator {
 		this.unitName = unitName;
 		this.transactionType = transactionType;
 		this.providerName = providerName;
+		try {
+			ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+			Thread.currentThread().setContextClassLoader(createProxy(originalClassLoader));
+		} catch (final Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public RuntimePersistenceGenerator addProperty(final String key, final String value) {
@@ -69,42 +75,7 @@ public class RuntimePersistenceGenerator {
 	}
 
 	public EntityManagerFactory createEntityManagerFactory() {
-		ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-
-		try {
-			Thread.currentThread().setContextClassLoader(createProxy(originalClassLoader));
-			return Persistence.createEntityManagerFactory(this.unitName);
-		} catch (final Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public static void addURLToSystemClassLoader(URL url) {
-		URLClassLoader systemClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-		addURLToURLClassLoader(url, systemClassLoader);
-	}
-
-	public static void addURLToContextClassLoader(URL url) {
-		URLClassLoader systemClassLoader = (URLClassLoader) Thread.currentThread().getContextClassLoader();
-		addURLToURLClassLoader(url, systemClassLoader);
-	}
-
-	public static void addURLToClassLoader(URL url) {
-		URLClassLoader systemClassLoader = (URLClassLoader) RuntimePersistenceGenerator.class.getClassLoader();
-		addURLToURLClassLoader(url, systemClassLoader);
-	}
-
-	public static void addURLToURLClassLoader(URL url, URLClassLoader cl) {
-		Class<URLClassLoader> classLoaderClass = URLClassLoader.class;
-
-		try {
-			Method method = classLoaderClass.getDeclaredMethod("addURL", new Class[] { URL.class });
-			method.setAccessible(true);
-			method.invoke(cl, new Object[] { url });
-		} catch (Throwable t) {
-			t.printStackTrace();
-			throw new RuntimeException("Error when adding url to system ClassLoader ");
-		}
+		return Persistence.createEntityManagerFactory(this.unitName);
 	}
 
 	protected Document createDocument() throws ParserConfigurationException {
@@ -153,10 +124,13 @@ public class RuntimePersistenceGenerator {
 
 	protected Element createPersistenceElement(final Document doc) {
 		final Element persistence = doc.createElement("persistence");
-		persistence.setAttribute("version", "2.0");
+		
+//		persistence.setAttribute("version", "2.0");
+		persistence.setAttribute("version", "1.0");
 		persistence.setAttribute("xmlns", "http://java.sun.com/xml/ns/persistence");
 		persistence.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-		persistence.setAttribute("xsi:schemaLocation", "http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd");
+//		persistence.setAttribute("xsi:schemaLocation", "http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd");
+		persistence.setAttribute("xsi:schemaLocation", "http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd");
 		return persistence;
 	}
 

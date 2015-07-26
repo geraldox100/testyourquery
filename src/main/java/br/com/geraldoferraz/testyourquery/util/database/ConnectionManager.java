@@ -10,19 +10,19 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.Session;
-
-import br.com.geraldoferraz.testyourquery.config.EntityManagerProvider;
+import br.com.geraldoferraz.testyourquery.config.DefaultEntityManagerProvider;
 
 public class ConnectionManager {
 	
 	private List<Connection> connections = new ArrayList<Connection>();;
 	private List<EntityManager> entityManagers = new ArrayList<EntityManager>();
 	private EntityManagerFactory emf;
+	private DefaultEntityManagerProvider entityManagerProvider;
 	
-	public ConnectionManager(EntityManagerProvider entityManagerProvider) {
+	
+	public ConnectionManager(DefaultEntityManagerProvider entityManagerProvider) {
+		this.entityManagerProvider = entityManagerProvider;
 		emf = entityManagerProvider.getEntityManagerFactory();
 	}
 	
@@ -34,9 +34,13 @@ public class ConnectionManager {
 	}
 
 	public Connection getNewConnection() {
-		Connection connection = emf.createEntityManager().unwrap(java.sql.Connection.class);
+		Connection connection = createConnection();
 		saveReference(connection);
 		return connection;
+	}
+
+	private Connection createConnection() {
+		return entityManagerProvider.getJDBCConnection();
 	}
 
 	public EntityManager getNewEntityManager() {
@@ -84,20 +88,14 @@ public class ConnectionManager {
 		entityManagers = new ArrayList<EntityManager>();
 	}
 
-	@SuppressWarnings("deprecation")
-	public static Connection getConnection(EntityManager em) {
-		try{
-			return em.unwrap(java.sql.Connection.class);
-		}catch(Exception e){
-			Session session = (Session) em.getDelegate();
-			return session.connection();
-		}
+	public Connection getConnection() {
+		return createConnection();  
 	}
 
 	public void clearData() {
-		Set<EntityType<?>> entities = emf.getMetamodel().getEntities();
+		Set<Class<?>> entities = entityManagerProvider.getEntities();
 		Map<String, Boolean> estadoTabela = new HashMap<String, Boolean>();
-		for (EntityType<?> entityType : entities) {
+		for (Class<?> entityType : entities) {
 			estadoTabela.put(entityType.getName(), false);
 		}
 		

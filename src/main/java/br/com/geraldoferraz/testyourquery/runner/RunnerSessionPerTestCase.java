@@ -27,7 +27,7 @@ public class RunnerSessionPerTestCase implements Runner {
 		ConnectionManager connectionManager = new ConnectionManager(configuration.getEntityManagerProvider());
 		runScriptIfAny(configuration, connectionManager);
 		em = connectionManager.getNewEntityManager();
-		conn = ConnectionManager.getConnection(em);
+		conn = connectionManager.getConnection();
 		initializeConnectionFactory();
 		initializeInjector(clazzReflector);
 	}
