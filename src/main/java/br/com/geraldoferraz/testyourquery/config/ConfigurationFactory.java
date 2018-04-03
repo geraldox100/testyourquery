@@ -81,9 +81,7 @@ public class ConfigurationFactory {
 			if(persistenceUnit != null && !(persistenceUnit.length() == 0)){
 				entityManagerProvider = new PersistenceUnitProvider(persistenceUnit);
 			}else{
-				HSQLDBProvider hsqldbProvider = new HSQLDBProvider();
-				hsqldbProvider.setSchema(schema);
-				hsqldbProvider.setEntities(getEntities());
+				HSQLDBProvider hsqldbProvider = new HSQLDBProvider(getEntities(), schema);
 				hsqldbProvider.setShowSQL(showSQL);
 				entityManagerProvider = hsqldbProvider;
 			}

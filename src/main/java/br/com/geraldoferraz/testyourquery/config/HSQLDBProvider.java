@@ -1,8 +1,6 @@
 package br.com.geraldoferraz.testyourquery.config;
 
 import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.annotatedWith;
-import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.namedWith;
-import static br.com.geraldoferraz.scanyourpath.searches.filters.arguments.SearchArguments.thatImplements;
 import static br.com.geraldoferraz.scanyourpath.searches.loaders.ClassPathLoaderTypes.full;
 
 import java.sql.Connection;
@@ -13,7 +11,6 @@ import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import br.com.geraldoferraz.scanyourpath.Scanner;
@@ -30,6 +27,11 @@ public class HSQLDBProvider implements EntityManagerProvider {
 	private RuntimePersistenceGenerator generator;
 
 	public HSQLDBProvider() {
+		this(null,null);
+	}
+	public HSQLDBProvider(Set<Class<?>> entities, String schema) {
+		setSchema(schema);
+		setEntities(entities);
 		scan.limitSearchingPathTo(full());
 		generator = new RuntimePersistenceGenerator("test", PersistenceUnitTransactionType.RESOURCE_LOCAL, getProvider());
 		setProperties(generator);
@@ -53,19 +55,23 @@ public class HSQLDBProvider implements EntityManagerProvider {
 	}
 
 	private String getProvider() {
-		Set<Class<?>> providers = scan.allClasses(
-				thatImplements(PersistenceProvider.class)
-				.or(namedWith("org.hibernate.ejb.HibernatePersistence"))
-				.or(namedWith("org.apache.openjpa.persistence.PersistenceProviderImpl"))
-				.or(namedWith("org.eclipse.persistence.jpa.PersistenceProvider"))
-			).anyWhere();
-		if (providers.size() > 0) {
-			Class<?> provider = providers.iterator().next();
-			return provider.getName();
-		} else {
-			return "org.hibernate.ejb.HibernatePersistence";
-		}
+		return chooseProvider("org.hibernate.ejb.HibernatePersistence","org.apache.openjpa.persistence.PersistenceProviderImpl","org.eclipse.persistence.jpa.PersistenceProvider");
+	}
 
+	private String chooseProvider(String... providers) {
+		String retorno = "";
+		for (String provider : providers) {
+			try {
+				Class<?> clazz = Class.forName(provider);
+				if(clazz !=null){
+					retorno = clazz.getName();
+					break;
+				}
+			} catch (ClassNotFoundException e) {
+				
+			}
+		}
+		return retorno;
 	}
 
 	private void executeStatement(String statement) throws ClassNotFoundException, SQLException {

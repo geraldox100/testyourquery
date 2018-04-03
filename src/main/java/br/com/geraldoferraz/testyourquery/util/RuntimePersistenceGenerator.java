@@ -125,12 +125,10 @@ public class RuntimePersistenceGenerator {
 	protected Element createPersistenceElement(final Document doc) {
 		final Element persistence = doc.createElement("persistence");
 		
-//		persistence.setAttribute("version", "2.0");
-		persistence.setAttribute("version", "1.0");
+		persistence.setAttribute("version", "2.0");
 		persistence.setAttribute("xmlns", "http://java.sun.com/xml/ns/persistence");
 		persistence.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-//		persistence.setAttribute("xsi:schemaLocation", "http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd");
-		persistence.setAttribute("xsi:schemaLocation", "http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd");
+		persistence.setAttribute("xsi:schemaLocation", "http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd");
 		return persistence;
 	}
 

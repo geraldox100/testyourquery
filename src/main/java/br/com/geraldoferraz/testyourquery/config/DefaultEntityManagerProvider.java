@@ -71,7 +71,7 @@ public class DefaultEntityManagerProvider implements EntityManagerProvider {
 				Element element = (Element) item;
 				if(element.getTagName().equals("properties")){
 					NodeList properties = element.getElementsByTagName("property");
-					for (int z = 0; i < properties.getLength(); z++) {
+					for (int z = 0; z < properties.getLength(); z++) {
 						NamedNodeMap attributes = properties.item(z).getAttributes();
 						
 						String name = attributes.getNamedItem("name").getTextContent();

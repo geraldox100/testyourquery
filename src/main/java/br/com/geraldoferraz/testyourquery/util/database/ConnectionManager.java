@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,7 +81,11 @@ public class ConnectionManager {
 
 	private void closeEntityManagers() {
 		for (EntityManager em : entityManagers) {
-			em.getTransaction().commit();
+			if(em.getTransaction().getRollbackOnly()){
+				em.getTransaction().rollback();
+			}else{
+				em.getTransaction().commit();
+			}
 			if (em.isOpen()) {
 				em.close();
 			}
@@ -94,34 +99,29 @@ public class ConnectionManager {
 
 	public void clearData() {
 		Set<Class<?>> entities = entityManagerProvider.getEntities();
-		Map<String, Boolean> estadoTabela = new HashMap<String, Boolean>();
-		for (Class<?> entityType : entities) {
-			estadoTabela.put(entityType.getName(), false);
+		try {
+			getConnection().createStatement().execute("SET REFERENTIAL_INTEGRITY FALSE;");
+		} catch (SQLException e1) {
+			e1.printStackTrace();
 		}
-		
-		Set<String> keySet = estadoTabela.keySet();
-		while(tabelaPossuiAlguemSemExcluir(estadoTabela)){
-			for (String tabela : keySet) {
+		ArrayList<Class<?>> lista = new ArrayList<Class<?>>(entities);
+		while(lista.size() > 0){
+			Iterator<Class<?>> it = lista.iterator();
+			String tabela = "";
+			while (it.hasNext()) {
 				try {
-					if(estadoTabela.get(tabela) == false){
-						getNewEntityManager().createQuery("delete from " + tabela).executeUpdate();
-						estadoTabela.put(tabela, true);
-					}
+					tabela = it.next().getSimpleName();
+					getNewEntityManager().createQuery("delete from " + tabela).executeUpdate();
+					it.remove();
 				} catch (Exception e) {
 				}
 			}
 		}
-	}
-	
-	private static boolean tabelaPossuiAlguemSemExcluir(Map<String, Boolean> estadoTabela) {
-		Set<String> keySet = estadoTabela.keySet();
-		for (String tabela : keySet) {
-			Boolean excluido = estadoTabela.get(tabela);
-			if(!excluido){
-				return true;
-			}
+		try {
+			getConnection().createStatement().execute("SET REFERENTIAL_INTEGRITY TRUE;");
+		} catch (SQLException e1) {
+			e1.printStackTrace();
 		}
-		return false;
 	}
 
 }
